@@ -40,6 +40,25 @@ self.addEventListener('activate', evt => {
 })
 
 self.addEventListener('fetch', function(evt) {
+    if (evt.request.url.includes('/api/transaction')) {
+        console.log('Service Worker fetch data', evt.request.url);
+        
+        evt.respondWith(
+            caches.open(DATA_CACHE_NAME).then(cache => {
+                return fetch(evt.request)
+                .then(response => {
+                    if (response.status === 200) {
+                        cache.put(evt.request.url, response.clone());
+                    }
+                    return response;
+            })
+            .catch(err => {
+                return cache.match(evt.request);
+            });
+            })
+        )
+        return;
+    }
     evt.respondWith(
         caches.open(CACHE_NAME).then(cache => {
           return cache.match(evt.request).then(response => {
@@ -47,4 +66,4 @@ self.addEventListener('fetch', function(evt) {
           });
         })
       );
-});
+    });
